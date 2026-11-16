@@ -34,6 +34,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .item{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .item span{flex:1}.item a{cursor:pointer;color:var(--accent);text-decoration:underline}
 label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+#gate{position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+#gate.off{display:none}
+#gate .box{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:8px;padding:28px;width:100%;max-width:380px}
+#gate h2{font:600 28px 'Newsreader',Georgia,serif;margin:0 0 4px}
+#gate input{width:100%;margin-bottom:10px}
+#gate .row{margin:0}
 #stage{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;flex-direction:column;padding:6vmin;text-align:center}
 #stage.on{display:flex}
 #stage .cols{display:flex;gap:5vmin;width:100%;justify-content:center}
@@ -44,11 +50,19 @@ label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4
 </style>
 </head>
 <body>
-<header><h1>Bible Presenter</h1><span>Search a verse, show it full screen, save it, download it as PowerPoint.</span><span id="who" style="margin-left:auto">Not logged in</span></header>
+<div id="gate"><div class="box">
+<h2>Bible Presenter</h2>
+<p class="msg" style="margin-top:0">Log in to open your verses, playlists, and favorites.</p>
+<input type="text" id="em" placeholder="Email" autocomplete="email" aria-label="Email">
+<input type="password" id="pw" placeholder="Password (6 or more characters)" autocomplete="current-password" aria-label="Password">
+<div class="row"><button class="go" id="login">Log in</button><button id="signup">Create account</button></div>
+<p class="msg" id="authMsg"></p>
+</div></div>
+<header><h1>Bible Presenter</h1><span>Search a verse, show it full screen, save it, download it as PowerPoint.</span><span id="who" style="margin-left:auto">Not logged in</span><button class="sm" id="logout" hidden>Log out</button></header>
 <main>
 <nav id="tabs">
 <button data-t="search" class="on">Search</button><button data-t="playlist">Playlist</button>
-<button data-t="history">History</button><button data-t="favs">Favorites</button><button data-t="account">Account</button><button data-t="settings">Settings</button>
+<button data-t="history">History</button><button data-t="favs">Favorites</button><button data-t="settings">Settings</button>
 </nav>
 
 <section id="search" class="on">
@@ -75,12 +89,6 @@ label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4
 <section id="history"><div class="row"><button id="csv">Export CSV</button><button id="hClear">Clear history</button></div><div id="hList"></div></section>
 <section id="favs"><div id="fList"><p class="msg">No favorites yet.</p></div></section>
 
-<section id="account">
-<p class="msg">Log in to save your history, playlist, and favorites to your account and open them on any device.</p>
-<div class="row"><input type="text" id="em" placeholder="Email" autocomplete="email"><input type="password" id="pw" placeholder="Password (6 or more characters)" autocomplete="current-password" style="flex:1;min-width:200px"></div>
-<div class="row"><button class="go" id="login">Log in</button><button id="signup">Create account</button><button id="logout" hidden>Log out</button></div>
-<p class="msg" id="authMsg"></p>
-</section>
 <section id="settings">
 <div class="row">
 <label>Background<input type="color" id="tBg"></label>
@@ -217,7 +225,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'escape') exit();
 });
 if (audience) {
-  document.body.querySelector('header').hidden = true; document.querySelector('main').hidden = true;
+  document.body.querySelector('header').hidden = true; document.querySelector('main').hidden = true; $('gate').classList.add('off');
   $('stage').classList.add('on');
   if (chan) chan.onmessage = e => draw(e.data.slide || {parts:[],ref:''}, e.data.theme, e.data.blank);
 }
@@ -270,7 +278,7 @@ document.addEventListener('click', e => {
 let user = null, plId = null;
 function authMsg(t, bad){ $('authMsg').textContent = t; $('authMsg').className = 'msg' + (bad ? ' err' : ''); }
 async function authDo(kind){
-  if (!sb) return authMsg('Add your Supabase anon key in the CONFIG at the top of the script first.', true);
+  if (!sb) return authMsg('Could not connect to Supabase. Check your internet connection, then refresh.', true);
   const email = $('em').value.trim(), password = $('pw').value;
   if (!email || password.length < 6) return authMsg('Enter your email and a password of 6 or more characters.', true);
   const {data, error} = kind === 'up' ? await sb.auth.signUp({email, password}) : await sb.auth.signInWithPassword({email, password});
@@ -279,8 +287,9 @@ async function authDo(kind){
 }
 async function setUser(u){
   user = u || null;
+  $('gate').classList.toggle('off', !!user || audience);
   $('who').textContent = user ? 'Logged in: ' + user.email : 'Not logged in';
-  $('logout').hidden = !user; $('login').hidden = !!user; $('signup').hidden = !!user;
+  $('logout').hidden = !user;
   if (user) await pull();
 }
 async function pull(){
@@ -301,7 +310,7 @@ async function pushPlaylist(){
 }
 function logRemote(h){ if (user && h) sb.from('display_history').insert({user_id:user.id, version_id:h.ver, reference:h.ref}).then(() => {}); }
 async function initAuth(){
-  if (!sb) { authMsg('Login is off until you add your Supabase anon key in the CONFIG at the top of the script.'); return; }
+  if (!sb) { authMsg('Could not connect to Supabase. Check your internet connection and the key in the CONFIG, then refresh.', true); return; }
   const {data} = await sb.auth.getSession(); setUser(data.session && data.session.user);
   sb.auth.onAuthStateChange((_e, s) => setUser(s && s.user));
 }
@@ -323,7 +332,13 @@ $('addfav').onclick = async () => {
 };
 $('login').onclick = () => authDo('in');
 $('signup').onclick = () => authDo('up');
-$('logout').onclick = async () => { if (sb) await sb.auth.signOut(); authMsg('Logged out.'); };
+$('logout').onclick = async () => {
+  if (sb) await sb.auth.signOut();
+  history = []; playlist = []; favs = []; plId = null;
+  save('bp.history', history); save('bp.playlist', playlist); save('bp.favs', favs); renderLists();
+  authMsg('You are logged out.');
+};
+$('pw').onkeydown = e => { if (e.key === 'Enter') authDo('in'); };
 $('plPresent').onclick = async () => present(await playlistSlides());
 $('plPpt').onclick = async () => downloadPPT(await playlistSlides(), 'service-playlist');
 $('plClear').onclick = () => { playlist = []; save('bp.playlist',playlist); renderLists(); pushPlaylist(); };
