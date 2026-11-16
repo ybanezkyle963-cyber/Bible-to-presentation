@@ -5,102 +5,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bible Presenter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
-:root{--bg:#eef1f6;--ink:#1c2340;--panel:#fff;--line:#d5dbe7;--accent:#2a6f97;--gold:#b8861f;--muted:#5d6785}
-@media (prefers-color-scheme:dark){:root{--bg:#141a30;--ink:#e8ebf5;--panel:#1d2544;--line:#2f3a63;--accent:#6bb3da;--gold:#e0b04c;--muted:#9aa5c9}}
+:root{--bg:#f1f3f8;--ink:#1a2140;--panel:#fff;--line:#dce1ee;--accent:#243b7a;--accent2:#34509f;--gold:#b8861f;--muted:#5d6785;--soft:#e8ecf7;--shadow:0 1px 2px rgba(26,33,64,.06),0 6px 18px rgba(26,33,64,.07)}
+@media (prefers-color-scheme:dark){:root{--bg:#11172b;--ink:#e8ebf5;--panel:#1a2240;--line:#2c3760;--accent:#6f93e6;--accent2:#8aa8ee;--gold:#e0b04c;--muted:#9aa5c9;--soft:#232d52;--shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25)}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Public Sans',system-ui,sans-serif}
-header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
-h1{font:600 26px 'Newsreader',Georgia,serif;margin:0}
-header span{color:var(--muted);font-size:14px}
-main{max-width:920px;margin:0 auto;padding:20px}
-nav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;flex-wrap:wrap}
-nav button{background:none;border:0;padding:10px 14px;font:inherit;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
-nav button.on{color:var(--ink);border-color:var(--accent);font-weight:600}
-section{display:none}section.on{display:block}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-input,select,button{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
-input[type=text]{flex:1;min-width:200px}
-input[type=color]{padding:2px;height:42px;width:60px}
-button.go{background:var(--accent);color:#fff;border-color:var(--accent);cursor:pointer;font-weight:600}
-button.sm{padding:5px 9px;font-size:13px;cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
-.verse{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:6px;padding:12px 16px;margin-bottom:8px;font:18px/1.6 'Newsreader',Georgia,serif}
-.verse b{font:600 13px 'Public Sans',sans-serif;color:var(--accent);margin-right:8px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Public Sans',system-ui,sans-serif}
+button{font:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}
+button:active:not(:disabled){transform:translateY(1px) scale(.98)}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select{font:inherit;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover{border-color:var(--accent)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 15px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font-weight:500}
+.btn:hover:not(:disabled){border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover:not(:disabled){background:var(--accent2)}
+.btn.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn.sm{padding:5px 10px;font-size:13px}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:10px 24px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:600 21px 'Newsreader',Georgia,serif}
+.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;font-size:18px}
+#tabs{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+#tabs button{border:0;background:none;padding:8px 14px;border-radius:999px;color:var(--muted);font-weight:500}
+#tabs button:hover{background:var(--soft);color:var(--ink)}
+#tabs button.on{background:var(--soft);color:var(--accent);font-weight:600}
+.acct{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+main{max-width:980px;margin:0 auto;padding:24px 20px 60px}
+section{display:none}section.on{display:block;animation:rise .25s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;box-shadow:var(--shadow);margin-bottom:18px}
+.hero h2{font:600 28px 'Newsreader',Georgia,serif;margin:0 0 4px}
+.hero p{margin:0 0 16px;color:var(--muted)}
+.sbox{position:relative}
+.sbox input{width:100%;font-size:18px;padding:15px 16px;border:2px solid var(--line);border-radius:10px}
+.sbox input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--soft);outline:0}
+.sug{position:absolute;left:0;right:0;top:100%;margin-top:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);z-index:10;overflow:hidden}
+.si{display:flex;justify-content:space-between;gap:14px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--line)}
+.si:last-child{border:0}.si b{font-weight:600}.si small{color:var(--muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si:hover,.si.act{background:var(--soft)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px;font-weight:500}
+.grow{flex:1;min-width:160px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center;color:var(--muted);font-size:13px}
+.chip{border:1px solid var(--line);background:var(--bg);padding:4px 12px;border-radius:999px;color:var(--ink)}
+.chip:hover{background:var(--soft);border-color:var(--accent);transform:translateY(-1px)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.verse{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:14px 18px;margin-bottom:10px;font:19px/1.65 'Newsreader',Georgia,serif;display:flex;gap:14px;align-items:flex-start;transition:transform .18s,box-shadow .18s,border-color .18s}
+.verse:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-left-color:var(--accent)}
+.verse .t{flex:1}.verse b{display:block;font:600 12px 'Public Sans',sans-serif;color:var(--accent);margin-bottom:2px}
+.verse .btn{opacity:0}.verse:hover .btn,.verse:focus-within .btn{opacity:1}
 .msg{color:var(--muted);padding:8px 0}.err{color:#b3261e}
-.item{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.item span{flex:1}.item a{cursor:pointer;color:var(--accent);text-decoration:underline}
-label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
-#gate{position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 18px;box-shadow:var(--shadow)}
+.item{display:flex;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);transition:background .15s}
+.item:last-child{border:0}.item:hover{background:var(--soft);margin:0 -18px;padding:11px 18px}
+.item span{flex:1}.item a{cursor:pointer;color:var(--accent);font-weight:600}.item a:hover{text-decoration:underline}
+.pnl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow)}
+.pnl h3{font:600 22px 'Newsreader',Georgia,serif;margin:0 0 4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:16px 0}
+.grid input[type=color]{width:100%;height:44px;padding:3px}
+#prev{border-radius:10px;padding:30px;text-align:center;margin:8px 0 16px;min-height:150px;display:flex;flex-direction:column;justify-content:center;transition:background .2s,color .2s}
+.dirty{color:var(--gold);font-weight:600;font-size:13px}
+.found{margin-top:10px}.found .item{padding:8px 0}
+#toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:300;box-shadow:var(--shadow)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#gate{position:fixed;inset:0;z-index:250;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
 #gate.off{display:none}
-#gate .box{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:8px;padding:28px;width:100%;max-width:380px}
-#gate h2{font:600 28px 'Newsreader',Georgia,serif;margin:0 0 4px}
+#gate .box{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:14px;padding:30px;width:100%;max-width:400px;box-shadow:var(--shadow)}
+#gate h2{font:600 28px 'Newsreader',Georgia,serif;margin:12px 0 4px}
 #gate input{width:100%;margin-bottom:10px}
-#gate .row{margin:0}
 #stage{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;flex-direction:column;padding:6vmin;text-align:center}
 #stage.on{display:flex}
-#stage .cols{display:flex;gap:5vmin;width:100%;justify-content:center}
+#stage .cols{display:flex;gap:5vmin;width:100%;justify-content:center;animation:fade .4s ease-out}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 #stage .col{flex:1}
 #stage .ref{position:absolute;bottom:4vmin;left:0;right:0;font:600 3vmin 'Public Sans',sans-serif;opacity:.8}
 #stage .ver{font:600 2.4vmin 'Public Sans',sans-serif;opacity:.6;margin-top:1vmin}
-#stage .hint{position:absolute;top:2vmin;right:3vmin;font:2vmin 'Public Sans',sans-serif;opacity:.35}
+#ctl{position:fixed;bottom:2vmin;left:50%;transform:translateX(-50%);z-index:120;display:none;gap:8px;align-items:center;background:rgba(0,0,0,.65);padding:8px 12px;border-radius:999px;color:#fff;opacity:0;transition:opacity .3s}
+#ctl.show{display:flex;opacity:1}#ctl button{background:rgba(255,255,255,.15);border:0;color:#fff;padding:7px 14px;border-radius:999px}
+#ctl button:hover{background:rgba(255,255,255,.3)}#ctl span{font-size:13px;min-width:54px;text-align:center}
 </style>
 </head>
 <body>
 <div id="gate"><div class="box">
+<div class="mark">✝</div>
 <h2>Bible Presenter</h2>
 <p class="msg" style="margin-top:0">Log in to open your verses, playlists, and favorites.</p>
 <input type="text" id="em" placeholder="Email" autocomplete="email" aria-label="Email">
 <input type="password" id="pw" placeholder="Password (6 or more characters)" autocomplete="current-password" aria-label="Password">
-<div class="row"><button class="go" id="login">Log in</button><button id="signup">Create account</button></div>
+<div class="row" style="margin-top:0"><button class="btn pri" id="login">Log in</button><button class="btn" id="signup">Create account</button></div>
 <p class="msg" id="authMsg"></p>
 </div></div>
-<header><h1>Bible Presenter</h1><span>Search a verse, show it full screen, save it, download it as PowerPoint.</span><span id="who" style="margin-left:auto">Not logged in</span><button class="sm" id="logout" hidden>Log out</button></header>
-<main>
-<nav id="tabs">
-<button data-t="search" class="on">Search</button><button data-t="playlist">Playlist</button>
-<button data-t="history">History</button><button data-t="favs">Favorites</button><button data-t="settings">Settings</button>
-</nav>
 
+<header class="top">
+<div class="brand"><span class="mark">✝</span>Bible Presenter</div>
+<nav id="tabs">
+<button data-t="search" class="on">Search</button><button data-t="playlist">Playlist</button><button data-t="history">History</button><button data-t="favs">Favorites</button><button data-t="settings">Settings</button>
+</nav>
+<div class="acct"><span id="who">Not logged in</span><button class="btn sm" id="logout" hidden>Log out</button></div>
+</header>
+
+<main>
 <section id="search" class="on">
+<div class="hero">
+<h2>Find a verse to present</h2>
+<p>Type a reference or a word. Suggestions appear as you type.</p>
+<div class="sbox"><input type="text" id="q" placeholder="John 3:16, Juan 3:16-18, or a word like love" aria-label="Verse reference" autocomplete="off" autofocus><div class="sug" id="sug" hidden></div></div>
 <div class="row">
-<input type="text" id="q" placeholder="John 3:16, Juan 3:16-18, Ps 23" aria-label="Verse reference" autofocus>
-<select id="ver" aria-label="Version"></select>
-<select id="ver2" aria-label="Compare with"><option value="">No comparison</option></select>
-<button class="go" id="find">Search</button>
+<label class="grow">Version<select id="ver"></select></label>
+<label class="grow">Compare with<select id="ver2"><option value="">No comparison</option></select></label>
+<button class="btn pri" id="find">Search</button>
 </div>
-<div class="row" id="actions" hidden>
-<button class="go" id="present">Present</button>
-<button id="proj">Open projector window</button>
-<button id="ppt">Download PowerPoint</button>
-<button id="addpl">Add to playlist</button>
-<button id="addfav">Save to favorites</button>
+<div class="chips">Try: <button class="chip" data-ex="John 3:16">John 3:16</button><button class="chip" data-ex="Salmo 23">Salmo 23</button><button class="chip" data-ex="Ps 91:1-4">Ps 91:1-4</button><button class="chip" data-ex="Rom 8:28">Rom 8:28</button></div>
 </div>
-<div id="out"><p class="msg">Type a reference above. Book names work in English and Cebuano.</p></div>
+<div class="bar" id="actions" hidden>
+<button class="btn pri" id="present">▶ Present</button>
+<button class="btn" id="proj">⧉ Open projector</button>
+<button class="btn" id="ppt">⬇ Download PowerPoint</button>
+<button class="btn" id="addpl">＋ Add to playlist</button>
+<button class="btn" id="addfav">☆ Save to favorites</button>
+</div>
+<div id="out"></div>
 </section>
 
-<section id="playlist"><p class="msg">Verses lined up for your service. Add them from Search.</p>
-<div class="row"><button class="go" id="plPresent">Present playlist</button><button id="plPpt">Download playlist as PowerPoint</button><button id="plClear">Clear</button></div>
-<div id="plList"></div></section>
+<section id="playlist"><div class="bar"><button class="btn pri" id="plPresent">▶ Present playlist</button><button class="btn" id="plPpt">⬇ Download as PowerPoint</button><button class="btn" id="plClear">Clear</button></div><div class="card" id="plList"></div></section>
+<section id="history"><div class="bar"><button class="btn" id="csv">⬇ Export CSV</button><button class="btn" id="hClear">Clear history</button></div><div class="card" id="hList"></div></section>
+<section id="favs"><div class="card" id="fList"></div></section>
 
-<section id="history"><div class="row"><button id="csv">Export CSV</button><button id="hClear">Clear history</button></div><div id="hList"></div></section>
-<section id="favs"><div id="fList"><p class="msg">No favorites yet.</p></div></section>
-
-<section id="settings">
-<div class="row">
+<section id="settings"><div class="pnl">
+<h3>Slide appearance</h3><p class="msg" style="margin:0">Changes show in the preview. Click Save changes to apply them to your slides and PowerPoint files.</p>
+<div class="grid">
 <label>Background<input type="color" id="tBg"></label>
 <label>Text color<input type="color" id="tFg"></label>
 <label>Text size<input type="range" id="tSize" min="3" max="9" step="0.5"></label>
 <label>Font<select id="tFont"><option>Newsreader</option><option>Georgia</option><option>Arial</option><option>Times New Roman</option></select></label>
-<label>Logo text (Logo screen)<input type="text" id="tLogo" placeholder="Church name"></label>
+<label>Logo text<input type="text" id="tLogo" placeholder="Church name"></label>
 </div>
-<p class="msg">Supabase: the RCPV text is read from your <code>bible_verses</code> table. Add your anon key in the CONFIG at the top of the script. Controls while presenting: ← → move, B black, W white, L logo, Esc exit.</p>
-</section>
+<div id="prev"></div>
+<h3 style="margin-top:22px">Cebuano Bible (YouVersion)</h3>
+<p class="msg" style="margin:0">Get a free app key at platform.youversion.com, paste it here, then find a Cebuano Bible and select it.</p>
+<div class="grid"><label>YouVersion app key<input type="text" id="tKey" placeholder="App key"></label><label>Cebuano Bible ID<input type="text" id="tCeb" placeholder="Pick from the list"></label></div>
+<button class="btn" id="findCeb">Find Cebuano Bibles</button><div class="found" id="found"></div>
+<div class="row" style="margin-top:22px;align-items:center"><button class="btn pri" id="saveSet" disabled>Save changes</button><button class="btn" id="resetSet">Reset to default</button><span class="dirty" id="dirty"></span></div>
+<p class="msg">Presenting controls: ← → move, B black, W white, L logo, Esc exit.</p>
+</div></section>
 </main>
+
 <div id="stage"></div>
+<div id="ctl"><button id="cPrev">◀</button><span id="cNum"></span><button id="cNext">▶</button><button id="cBlack">Black</button><button id="cExit">Exit</button></div>
+<div id="toast" role="status"></div>
 
 <script>
 // ===== CONFIG =====
@@ -110,20 +166,28 @@ const CFG = {
 };
 const sb = (CFG.SUPA_KEY && window.supabase) ? supabase.createClient(CFG.SUPA_URL, CFG.SUPA_KEY) : null;
 
-const VERSIONS = {KJV:'King James Version', WEB:'World English Bible', BBE:'Bible in Basic English', RCPV:'Ang Bag-ong Maayong Balita Biblia (RCPV)'};
+const VERSIONS = {KJV:'King James Version', WEB:'World English Bible', BBE:'Bible in Basic English', RCPV:'Cebuano RCPV (your Supabase)', CEB:'Cebuano (YouVersion)'};
+const CEB_VERS = ['RCPV','CEB'];
 const BOOKS = ('Genesis|Genesis;Exodus|Exodo;Leviticus|Levitico;Numbers|Numeros;Deuteronomy|Deuteronomio;Joshua|Josue;Judges|Mga Maghuhukom;Ruth|Rut;1 Samuel|1 Samuel;2 Samuel|2 Samuel;1 Kings|1 Mga Hari;2 Kings|2 Mga Hari;1 Chronicles|1 Cronica;2 Chronicles|2 Cronica;Ezra|Esdras;Nehemiah|Nehemias;Esther|Ester;Job|Job;Psalms|Salmo;Proverbs|Proverbio;Ecclesiastes|Eclesiastes;Song of Solomon|Awit ni Solomon;Isaiah|Isaias;Jeremiah|Jeremias;Lamentations|Panaghoy;Ezekiel|Ezekiel;Daniel|Daniel;Hosea|Oseas;Joel|Joel;Amos|Amos;Obadiah|Obadias;Jonah|Jonas;Micah|Miqueas;Nahum|Nahum;Habakkuk|Habacuc;Zephaniah|Sofonias;Haggai|Ageo;Zechariah|Zacarias;Malachi|Malaquias;Matthew|Mateo;Mark|Marcos;Luke|Lucas;John|Juan;Acts|Mga Buhat;Romans|Roma;1 Corinthians|1 Corinto;2 Corinthians|2 Corinto;Galatians|Galacia;Ephesians|Efeso;Philippians|Filipos;Colossians|Colosas;1 Thessalonians|1 Tesalonica;2 Thessalonians|2 Tesalonica;1 Timothy|1 Timoteo;2 Timothy|2 Timoteo;Titus|Tito;Philemon|Filemon;Hebrews|Hebreo;James|Santiago;1 Peter|1 Pedro;2 Peter|2 Pedro;1 John|1 Juan;2 John|2 Juan;3 John|3 Juan;Jude|Judas;Revelation|Pinadayag').split(';').map(s=>s.split('|'));
+const USFM = 'GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST JOB PSA PRO ECC SNG ISA JER LAM EZK DAN HOS JOL AMO OBA JON MIC NAM HAB ZEP HAG ZEC MAL MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV'.split(' ');
 const ALIAS = {jn:'john',mt:'matthew',mk:'mark',lk:'luke',ps:'psalms','1jn':'1john','2jn':'2john','3jn':'3john',sos:'songofsolomon'};
+const POP = [['John 3:16','For God so loved the world, that he gave his only begotten Son'],['Psalm 23:1','The Lord is my shepherd; I shall not want'],['Philippians 4:13','I can do all things through Christ which strengtheneth me'],['Jeremiah 29:11','thoughts of peace, and not of evil, to give you an expected end'],['Romans 8:28','all things work together for good to them that love God'],['Proverbs 3:5-6','Trust in the Lord with all thine heart'],['Isaiah 41:10','Fear thou not; for I am with thee'],['Matthew 6:33','Seek ye first the kingdom of God'],['Joshua 1:9','Be strong and of a good courage'],['Romans 12:2','be not conformed to this world'],['1 Corinthians 13:4','Charity suffereth long, and is kind'],['Genesis 1:1','In the beginning God created the heaven and the earth'],['Psalm 46:1','God is our refuge and strength'],['Matthew 11:28','Come unto me, all ye that labour and are heavy laden'],['Ephesians 2:8','by grace are ye saved through faith'],['Hebrews 11:1','Now faith is the substance of things hoped for'],['2 Timothy 1:7','God hath not given us the spirit of fear'],['Psalm 119:105','Thy word is a lamp unto my feet'],['John 14:6','I am the way, the truth, and the life'],['Galatians 5:22','the fruit of the Spirit is love, joy, peace'],['1 John 4:8','God is love'],['Matthew 28:19','Go ye therefore, and teach all nations'],['Psalm 91:1','He that dwelleth in the secret place of the most High'],['Isaiah 40:31','they that wait upon the Lord shall renew their strength']];
 const $ = id => document.getElementById(id);
 const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g,'');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const load = (k,d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } };
 const save = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} };
-
-let theme = Object.assign({bg:'#14213d',fg:'#ffffff',size:6,font:'Newsreader',logo:''}, load('bp.theme',{}));
+const DEF = {bg:'#14213d',fg:'#ffffff',size:6,font:'Newsreader',logo:'',yvpKey:'',cebId:''};
+let theme = Object.assign({}, DEF, load('bp.theme',{}));
+let draft = Object.assign({}, theme);
 let playlist = load('bp.playlist',[]), history = load('bp.history',[]), favs = load('bp.favs',[]);
-let current = null;      // {slides, query}
-let S = [], idx = 0, blank = null;
+let current = null, S = [], idx = 0, blank = null, user = null, plId = null;
 const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('bible-presenter') : null;
 const audience = new URLSearchParams(location.search).get('audience') === '1';
+const themeOnly = t => ({bg:t.bg, fg:t.fg, size:t.size, font:t.font, logo:t.logo});
+
+let tt;
+function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2400); }
 
 // ===== Reference parsing =====
 function findBook(q){
@@ -136,20 +200,34 @@ function parseRef(q){
   const m = q.trim().match(/^(.+?)\s*(\d+)(?:\s*[:.]\s*(\d+)(?:\s*-\s*(\d+))?)?$/);
   if (!m) return null;
   const b = findBook(m[1]);
-  if (b < 0) return null;
-  return {b, ch:+m[2], v1:m[3]?+m[3]:null, v2:m[4]?+m[4]:null};
+  return b < 0 ? null : {b, ch:+m[2], v1:m[3]?+m[3]:null, v2:m[4]?+m[4]:null};
 }
 
-// ===== Fetch verses =====
+// ===== Verse sources =====
+const stripHtml = h => h.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+async function yvp(id, usfm){
+  if (!theme.yvpKey || !id) throw new Error('Add your YouVersion app key and pick a Cebuano Bible in Settings first.');
+  const res = await fetch(`https://api.youversion.com/v1/bibles/${id}/passages/${usfm}?format=text`, {headers:{'X-YVP-App-Key':theme.yvpKey}});
+  if (res.status === 401 || res.status === 403) throw new Error('YouVersion did not accept the app key. Check it in Settings.');
+  if (!res.ok) throw new Error('YouVersion could not find that passage in Bible ID ' + id + '.');
+  const j = await res.json();
+  return stripHtml(j.content || '').replace(/^\d+\s+/, '');
+}
 async function getVerses(ver, r){
   if (ver === 'RCPV') {
-    if (!sb) throw new Error('RCPV is not loaded yet. Add your Supabase anon key and import the RCPV text (with the publisher’s permission).');
+    if (!sb) throw new Error('Supabase is not connected.');
     let qy = sb.from('bible_verses').select('verse,text').eq('version_id','RCPV').eq('book_id',r.b+1).eq('chapter',r.ch).order('verse');
     if (r.v1) qy = qy.gte('verse',r.v1).lte('verse',r.v2||r.v1);
     const {data,error} = await qy;
     if (error) throw new Error(error.message);
-    if (!data.length) throw new Error('No RCPV verses found for that reference.');
+    if (!data.length) throw new Error('RCPV text is not in your Supabase yet. Try the Cebuano (YouVersion) version.');
     return data.map(d => ({v:d.verse, text:d.text}));
+  }
+  if (ver === 'CEB') {
+    const code = USFM[r.b] + '.' + r.ch;
+    if (!r.v1) return [{v:null, text: await yvp(theme.cebId, code)}];
+    const nums = []; for (let v = r.v1; v <= Math.min(r.v2 || r.v1, r.v1 + 39); v++) nums.push(v);
+    return Promise.all(nums.map(async v => ({v, text: await yvp(theme.cebId, code + '.' + v)})));
   }
   const ref = BOOKS[r.b][0] + ' ' + r.ch + (r.v1 ? ':' + r.v1 + (r.v2 ? '-' + r.v2 : '') : '');
   const res = await fetch('https://bible-api.com/' + encodeURIComponent(ref) + '?translation=' + ver.toLowerCase());
@@ -159,35 +237,68 @@ async function getVerses(ver, r){
 }
 async function buildSlides(query, ver, ver2){
   const r = parseRef(query);
-  if (!r) throw new Error('Use a format like John 3:16 or Juan 3:16-18.');
+  if (!r) throw new Error('Use a format like John 3:16 or Juan 3:16-18. Pick a suggestion if you are not sure.');
   const a = await getVerses(ver, r);
   const b = ver2 ? await getVerses(ver2, r).catch(() => []) : [];
-  const name = ver === 'RCPV' ? BOOKS[r.b][1] : BOOKS[r.b][0];
+  const name = CEB_VERS.includes(ver) ? BOOKS[r.b][1] : BOOKS[r.b][0];
   return a.map(x => {
-    const parts = [{ver, text:x.text}];
-    const o = b.find(y => y.v === x.v);
+    const parts = [{ver, text:x.text}], o = b.find(y => y.v === x.v);
     if (o) parts.push({ver:ver2, text:o.text});
-    return {ref: name + ' ' + r.ch + ':' + x.v, parts};
+    return {ref: name + ' ' + r.ch + (x.v ? ':' + x.v : ''), parts};
   });
 }
 
+// ===== Search suggestions =====
+let sugItems = [], sugAct = -1;
+function suggest(){
+  const t = $('q').value.trim(), box = $('sug'); sugItems = []; sugAct = -1;
+  if (t) {
+    const m = t.match(/^(\d?\s*[a-zA-Z .]+?)(?:\s*(\d.*))?$/);
+    if (m) {
+      const n = norm(m[1]);
+      if (n && !m[2]) BOOKS.forEach(b => { if (norm(b[0]).startsWith(n) || norm(b[1]).startsWith(n)) sugItems.push({label:b[0] + (b[0] !== b[1] ? ' · ' + b[1] : ''), hint:'Book', fill:b[0] + ' '}); });
+      if (m[2] && /^\d+$/.test(m[2])) { const bi = findBook(m[1]); if (bi >= 0) sugItems.push({label:BOOKS[bi][0] + ' ' + m[2], hint:'Whole chapter', fill:BOOKS[bi][0] + ' ' + m[2], go:true}); }
+    }
+    const tl = t.toLowerCase();
+    POP.forEach(p => { if (p[0].toLowerCase().includes(tl) || p[1].toLowerCase().includes(tl)) sugItems.push({label:p[0], hint:p[1], fill:p[0], go:true}); });
+  }
+  sugItems = sugItems.slice(0, 8);
+  box.hidden = !sugItems.length;
+  box.innerHTML = sugItems.map((s,i) => `<div class="si" data-i="${i}"><b>${esc(s.label)}</b><small>${esc(s.hint)}</small></div>`).join('');
+}
+function pick(i){
+  const s = sugItems[i]; if (!s) return;
+  $('q').value = s.fill; $('sug').hidden = true;
+  if (s.go) search(); else { $('q').focus(); suggest(); }
+}
+function markAct(){ [...$('sug').children].forEach((c,i) => c.classList.toggle('act', i === sugAct)); }
+$('q').addEventListener('input', suggest);
+$('q').addEventListener('keydown', e => {
+  const open = !$('sug').hidden;
+  if (e.key === 'ArrowDown' && open) { e.preventDefault(); sugAct = (sugAct + 1) % sugItems.length; markAct(); }
+  else if (e.key === 'ArrowUp' && open) { e.preventDefault(); sugAct = (sugAct - 1 + sugItems.length) % sugItems.length; markAct(); }
+  else if (e.key === 'Enter') { if (open && sugAct >= 0) pick(sugAct); else { $('sug').hidden = true; search(); } }
+  else if (e.key === 'Escape') $('sug').hidden = true;
+});
+$('q').addEventListener('blur', () => setTimeout(() => $('sug').hidden = true, 120));
+$('sug').addEventListener('mousedown', e => { e.preventDefault(); const it = e.target.closest('.si'); if (it) pick(+it.dataset.i); });
+
 // ===== Search UI =====
 function fillSelects(){
-  const opts = Object.entries(VERSIONS).map(([k,v]) => `<option value="${k}">${k} – ${v}</option>`).join('');
-  $('ver').innerHTML = opts;
-  $('ver2').innerHTML = '<option value="">No comparison</option>' + opts;
+  const o = Object.entries(VERSIONS).map(([k,v]) => `<option value="${k}">${k} · ${v}</option>`).join('');
+  $('ver').innerHTML = o; $('ver2').innerHTML = '<option value="">No comparison</option>' + o;
 }
 async function search(){
   const q = $('q').value.trim(); if (!q) return;
-  $('out').innerHTML = '<p class="msg">Loading…</p>'; $('actions').hidden = true;
+  $('out').innerHTML = '<p class="msg">Loading…</p>'; $('actions').hidden = true; $('find').disabled = true;
   try {
     const slides = await buildSlides(q, $('ver').value, $('ver2').value);
     current = {slides, query:q};
-    $('out').innerHTML = slides.map(s => `<div class="verse"><b>${esc(s.ref)}</b>${s.parts.map(p => `<div>${esc(p.text)}${s.parts.length>1?` <small>(${p.ver})</small>`:''}</div>`).join('')}</div>`).join('');
-    $('actions').hidden = false;
+    $('out').innerHTML = slides.map((s,i) => `<div class="verse"><div class="t"><b>${esc(s.ref)}</b>${s.parts.map(p => `<div>${esc(p.text)}${s.parts.length>1?` <small>(${p.ver})</small>`:''}</div>`).join('')}</div><button class="btn sm" data-from="${i}">▶ Present from here</button></div>`).join('');
+    $('actions').hidden = false; updFav();
   } catch (e) { $('out').innerHTML = `<p class="msg err">${esc(e.message)}</p>`; }
+  $('find').disabled = false;
 }
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 // ===== Presentation =====
 function draw(slide, th, bl){
@@ -197,74 +308,88 @@ function draw(slide, th, bl){
   st.style.fontFamily = `'${th.font}', Georgia, serif`;
   if (bl === 'black' || bl === 'white') { st.innerHTML = ''; return; }
   if (bl === 'logo') { st.innerHTML = `<div style="font-size:8vmin">✝</div><div style="font-size:5vmin">${esc(th.logo)}</div>`; return; }
+  if (!slide || !slide.parts.length) { st.innerHTML = '<div style="font-size:4vmin;opacity:.6">Waiting for the presenter…</div>'; return; }
   const len = slide.parts.reduce((n,p) => n + p.text.length, 0) / slide.parts.length;
-  const k = len < 120 ? 1 : len < 250 ? .8 : len < 400 ? .65 : .5;
-  const fs = th.size * k * (slide.parts.length > 1 ? .8 : 1);
-  st.innerHTML = `${audience?'':'<div class="hint">Esc to exit</div>'}<div class="cols">${slide.parts.map(p => `<div class="col"><div style="font-size:${fs}vmin;line-height:1.35">${esc(p.text)}</div>${slide.parts.length>1?`<div class="ver">${p.ver}</div>`:''}</div>`).join('')}</div><div class="ref">${esc(slide.ref)}${slide.parts.length===1?' · '+slide.parts[0].ver:''}</div>`;
+  const fs = th.size * (len < 120 ? 1 : len < 250 ? .8 : len < 400 ? .65 : .5) * (slide.parts.length > 1 ? .8 : 1);
+  st.innerHTML = `<div class="cols">${slide.parts.map(p => `<div class="col"><div style="font-size:${fs}vmin;line-height:1.35">${esc(p.text)}</div>${slide.parts.length>1?`<div class="ver">${p.ver}</div>`:''}</div>`).join('')}</div><div class="ref">${esc(slide.ref)}${slide.parts.length===1?' · '+slide.parts[0].ver:''}</div>`;
 }
 function show(){
   draw(S[idx], theme, blank);
-  if (chan) chan.postMessage({slide:S[idx], theme, blank});
-  if (!blank && S[idx]) { history.unshift({ref:S[idx].ref, ver:S[idx].parts.map(p=>p.ver).join('+'), t:new Date().toLocaleString()}); history = history.slice(0,300); save('bp.history',history); logRemote(history[0]); }
+  if (chan) chan.postMessage({slide:S[idx], theme:themeOnly(theme), blank});
+  $('cNum').textContent = (idx + 1) + ' / ' + S.length;
+  if (!blank && S[idx]) { history.unshift({ref:S[idx].ref, ver:S[idx].parts.map(p => p.ver).join('+'), t:new Date().toLocaleString()}); history = history.slice(0,300); save('bp.history',history); logRemote(history[0]); }
 }
-function present(slides){
+let ctlT;
+function ctlShow(){ const c = $('ctl'); c.classList.add('show'); clearTimeout(ctlT); ctlT = setTimeout(() => c.classList.remove('show'), 2600); }
+document.addEventListener('mousemove', () => { if ($('stage').classList.contains('on') && !audience) ctlShow(); });
+function present(slides, from){
   if (!slides || !slides.length) return;
-  S = slides; idx = 0; blank = null;
-  $('stage').classList.add('on'); show();
-  if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+  S = slides; idx = from || 0; blank = null;
+  $('stage').classList.add('on'); show(); ctlShow();
+  if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
 }
-function exit(){ $('stage').classList.remove('on'); if (document.fullscreenElement) document.exitFullscreen(); renderHistory(); }
+function exit(){ $('stage').classList.remove('on'); $('ctl').classList.remove('show'); if (document.fullscreenElement) document.exitFullscreen(); renderLists(); }
+const go = d => { idx = Math.max(0, Math.min(S.length-1, idx + d)); blank = null; show(); };
+const tog = k => { blank = blank === k ? null : k; show(); };
 document.addEventListener('keydown', e => {
   if (!$('stage').classList.contains('on') || audience) return;
   const k = e.key.toLowerCase();
-  if (k === 'arrowright' || k === ' ') { idx = Math.min(S.length-1, idx+1); blank = null; show(); }
-  else if (k === 'arrowleft') { idx = Math.max(0, idx-1); blank = null; show(); }
-  else if (k === 'b') { blank = blank==='black' ? null : 'black'; show(); }
-  else if (k === 'w') { blank = blank==='white' ? null : 'white'; show(); }
-  else if (k === 'l') { blank = blank==='logo' ? null : 'logo'; show(); }
+  if (k === 'arrowright' || k === ' ') { e.preventDefault(); go(1); }
+  else if (k === 'arrowleft') go(-1);
+  else if (k === 'b') tog('black'); else if (k === 'w') tog('white'); else if (k === 'l') tog('logo');
   else if (k === 'escape') exit();
 });
+$('cPrev').onclick = () => go(-1); $('cNext').onclick = () => go(1); $('cBlack').onclick = () => tog('black'); $('cExit').onclick = exit;
 if (audience) {
-  document.body.querySelector('header').hidden = true; document.querySelector('main').hidden = true; $('gate').classList.add('off');
-  $('stage').classList.add('on');
-  if (chan) chan.onmessage = e => draw(e.data.slide || {parts:[],ref:''}, e.data.theme, e.data.blank);
+  document.querySelector('header').hidden = true; document.querySelector('main').hidden = true; $('gate').classList.add('off');
+  $('stage').classList.add('on'); draw(null, theme, null);
+  if (chan) chan.onmessage = e => draw(e.data.slide, e.data.theme, e.data.blank);
 }
 
 // ===== PowerPoint =====
-function downloadPPT(slides, name){
-  if (!window.PptxGenJS) { alert('PowerPoint library did not load. Check your internet connection.'); return; }
-  const p = new PptxGenJS(); p.layout = 'LAYOUT_16x9';
-  const bg = theme.bg.slice(1), fg = theme.fg.slice(1);
-  slides.forEach(s => {
-    const sl = p.addSlide(); sl.background = {color:bg};
-    const n = s.parts.length, w = 12 / n;
-    const len = s.parts.reduce((a,x) => a + x.text.length, 0) / n;
-    const size = (len < 120 ? 40 : len < 250 ? 32 : len < 400 ? 26 : 20) - (n > 1 ? 6 : 0);
-    s.parts.forEach((part, i) => {
-      sl.addText(part.text, {x:0.4 + i*(w+0.2)*(12.5/13), y:0.5, w:w-0.2, h:5, fontFace:theme.font, fontSize:size, color:fg, align:'center', valign:'middle', fit:'shrink'});
-      if (n > 1) sl.addText(part.ver, {x:0.4 + i*(w+0.2)*(12.5/13), y:5.4, w:w-0.2, h:0.4, fontSize:14, color:fg, align:'center'});
+async function downloadPPT(slides, name, btn){
+  if (!window.PptxGenJS) { toast('The PowerPoint tool did not load. Check your internet and refresh.'); return; }
+  if (!slides.length) return;
+  const old = btn && btn.innerHTML; if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+  try {
+    const p = new PptxGenJS(); p.layout = 'LAYOUT_16x9';
+    const bg = theme.bg.slice(1), fg = theme.fg.slice(1);
+    slides.forEach(s => {
+      const sl = p.addSlide(); sl.background = {color:bg};
+      const n = s.parts.length, w = 12 / n;
+      const len = s.parts.reduce((a,x) => a + x.text.length, 0) / n;
+      const size = (len < 120 ? 40 : len < 250 ? 32 : len < 400 ? 26 : 20) - (n > 1 ? 6 : 0);
+      s.parts.forEach((part, i) => {
+        const x = 0.4 + i * (w + 0.2) * (12.5 / 13);
+        sl.addText(part.text, {x, y:0.5, w:w-0.2, h:5, fontFace:theme.font, fontSize:size, color:fg, align:'center', valign:'middle', fit:'shrink'});
+        if (n > 1) sl.addText(part.ver, {x, y:5.4, w:w-0.2, h:0.4, fontSize:14, color:fg, align:'center'});
+      });
+      sl.addText(s.ref + (n === 1 ? ' (' + s.parts[0].ver + ')' : ''), {x:0.5, y:6.3, w:12.3, h:0.6, fontSize:20, bold:true, color:fg, align:'center'});
     });
-    sl.addText(s.ref + (n===1 ? ' (' + s.parts[0].ver + ')' : ''), {x:0.5, y:6.3, w:12.3, h:0.6, fontSize:20, bold:true, color:fg, align:'center'});
-  });
-  p.writeFile({fileName: name + '.pptx'});
+    await p.writeFile({fileName: name + '.pptx'});
+    toast('PowerPoint downloaded.');
+  } catch (e) { toast('Could not make the PowerPoint: ' + e.message); }
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
 }
 
 // ===== Playlist, history, favorites =====
 function renderLists(){
-  $('plList').innerHTML = playlist.length ? playlist.map((it,i) => `<div class="item"><span>${esc(it.query)} · ${it.ver}${it.ver2?' + '+it.ver2:''}</span><button class="sm" data-up="${i}">Up</button><button class="sm" data-dn="${i}">Down</button><button class="sm" data-rm="${i}">Remove</button></div>`).join('') : '<p class="msg">The playlist is empty.</p>';
-  $('fList').innerHTML = favs.length ? favs.map((it,i) => `<div class="item"><span><a data-open="${i}">${esc(it.query)}</a> · ${it.ver}</span><button class="sm" data-fr="${i}">Remove</button></div>`).join('') : '<p class="msg">No favorites yet. Search a verse and choose Save to favorites.</p>';
-  renderHistory();
-}
-function renderHistory(){
+  $('plList').innerHTML = playlist.length ? playlist.map((it,i) => `<div class="item"><span>${esc(it.query)} · ${it.ver}${it.ver2?' + '+it.ver2:''}</span><button class="btn sm" data-up="${i}">Up</button><button class="btn sm" data-dn="${i}">Down</button><button class="btn sm" data-rm="${i}">Remove</button></div>`).join('') : '<p class="msg">Your playlist is empty. Search a verse and choose Add to playlist.</p>';
+  $('fList').innerHTML = favs.length ? favs.map((it,i) => `<div class="item"><span><a data-open="${i}">${esc(it.query)}</a> · ${it.ver}</span><button class="btn sm" data-fr="${i}">Remove</button></div>`).join('') : '<p class="msg">No favorites yet. Search a verse and choose Save to favorites.</p>';
   $('hList').innerHTML = history.length ? history.map(h => `<div class="item"><span>${esc(h.ref)} · ${esc(h.ver)}</span><small>${esc(h.t)}</small></div>`).join('') : '<p class="msg">Verses you present are recorded here.</p>';
+  updFav();
 }
+const favIndex = () => current ? favs.findIndex(f => f.query.toLowerCase() === current.query.toLowerCase() && f.ver === $('ver').value) : -1;
+function updFav(){ const b = $('addfav'), s = favIndex() >= 0; b.textContent = s ? '★ Saved to favorites' : '☆ Save to favorites'; b.classList.toggle('on', s); }
 async function playlistSlides(){
   let all = [];
-  for (const it of playlist) { try { all = all.concat(await buildSlides(it.query, it.ver, it.ver2)); } catch (e) { alert(it.query + ': ' + e.message); } }
+  for (const it of playlist) { try { all = all.concat(await buildSlides(it.query, it.ver, it.ver2)); } catch (e) { toast(it.query + ': ' + e.message); } }
   return all;
 }
 document.addEventListener('click', e => {
   const d = e.target.dataset;
+  if (d.ex) { $('q').value = d.ex; search(); return; }
+  if (d.from !== undefined) { present(current.slides, +d.from); return; }
   if (d.up !== undefined && +d.up > 0) { const i = +d.up; [playlist[i-1], playlist[i]] = [playlist[i], playlist[i-1]]; }
   else if (d.dn !== undefined && +d.dn < playlist.length-1) { const i = +d.dn; [playlist[i+1], playlist[i]] = [playlist[i], playlist[i+1]]; }
   else if (d.rm !== undefined) playlist.splice(+d.rm, 1);
@@ -275,7 +400,6 @@ document.addEventListener('click', e => {
 });
 
 // ===== Account (Supabase Auth) =====
-let user = null, plId = null;
 function authMsg(t, bad){ $('authMsg').textContent = t; $('authMsg').className = 'msg' + (bad ? ' err' : ''); }
 async function authDo(kind){
   if (!sb) return authMsg('Could not connect to Supabase. Check your internet connection, then refresh.', true);
@@ -288,7 +412,7 @@ async function authDo(kind){
 async function setUser(u){
   user = u || null;
   $('gate').classList.toggle('off', !!user || audience);
-  $('who').textContent = user ? 'Logged in: ' + user.email : 'Not logged in';
+  $('who').textContent = user ? user.email : 'Not logged in';
   $('logout').hidden = !user;
   if (user) await pull();
 }
@@ -310,48 +434,78 @@ async function pushPlaylist(){
 }
 function logRemote(h){ if (user && h) sb.from('display_history').insert({user_id:user.id, version_id:h.ver, reference:h.ref}).then(() => {}); }
 async function initAuth(){
-  if (!sb) { authMsg('Could not connect to Supabase. Check your internet connection and the key in the CONFIG, then refresh.', true); return; }
+  if (!sb) { authMsg('Could not connect to Supabase. Check your internet connection and refresh.', true); return; }
   const {data} = await sb.auth.getSession(); setUser(data.session && data.session.user);
   sb.auth.onAuthStateChange((_e, s) => setUser(s && s.user));
 }
 
+// ===== Settings (with Save changes) =====
+const FIELDS = [['tBg','bg'],['tFg','fg'],['tSize','size'],['tFont','font'],['tLogo','logo'],['tKey','yvpKey'],['tCeb','cebId']];
+function isDirty(){ return JSON.stringify(draft) !== JSON.stringify(theme); }
+function previewSet(){
+  const p = $('prev');
+  p.style.background = draft.bg; p.style.color = draft.fg; p.style.fontFamily = `'${draft.font}', Georgia, serif`;
+  p.innerHTML = `<div style="font-size:${draft.size * 3.2}px;line-height:1.35">For God so loved the world, that he gave his only begotten Son.</div><div style="margin-top:10px;font:600 14px 'Public Sans',sans-serif;opacity:.8">John 3:16 · KJV${draft.logo ? ' · ' + esc(draft.logo) : ''}</div>`;
+  $('saveSet').disabled = !isDirty(); $('dirty').textContent = isDirty() ? 'You have unsaved changes' : '';
+}
+function fillSet(){ FIELDS.forEach(([id,k]) => $(id).value = draft[k]); previewSet(); }
+FIELDS.forEach(([id,k]) => $(id).oninput = () => { draft[k] = k === 'size' ? +$(id).value : $(id).value.trim ? $(id).value : $(id).value; previewSet(); });
+$('saveSet').onclick = () => { draft.yvpKey = draft.yvpKey.trim(); draft.cebId = draft.cebId.trim(); theme = Object.assign({}, draft); save('bp.theme', theme); previewSet(); toast('Settings saved.'); };
+$('resetSet').onclick = () => { draft = Object.assign({}, DEF, {yvpKey:draft.yvpKey, cebId:draft.cebId}); fillSet(); toast('Defaults restored. Click Save changes to keep them.'); };
+$('findCeb').onclick = async () => {
+  const key = $('tKey').value.trim(), out = $('found');
+  if (!key) { out.innerHTML = '<p class="msg err">Paste your YouVersion app key first.</p>'; return; }
+  out.innerHTML = '<p class="msg">Searching…</p>';
+  try {
+    const res = await fetch('https://api.youversion.com/v1/bibles?language_ranges[]=ceb&all_available=true', {headers:{'X-YVP-App-Key':key}});
+    if (!res.ok) throw new Error(res.status === 401 || res.status === 403 ? 'YouVersion did not accept that app key.' : 'YouVersion returned an error (' + res.status + ').');
+    const j = await res.json(), list = j.data || j.bibles || j || [];
+    if (!Array.isArray(list) || !list.length) { out.innerHTML = '<p class="msg">No Cebuano Bibles were returned for this key.</p>'; return; }
+    out.innerHTML = '<div class="card">' + list.map(b => `<div class="item"><span><b>${esc(b.abbreviation || '')}</b> ${esc(b.localized_title || b.title || '')} (ID ${esc(b.id)})</span><button class="btn sm" data-useceb="${esc(b.id)}">Use this one</button></div>`).join('') + '</div>';
+  } catch (e) { out.innerHTML = `<p class="msg err">${esc(e.message)} If this keeps failing, the key may be blocked from browsers.</p>`; }
+};
+$('found').addEventListener('click', e => { const id = e.target.dataset.useceb; if (id) { draft.cebId = id; fillSet(); toast('Selected. Click Save changes.'); } });
+
 // ===== Wiring =====
-function tab(t){ document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === t)); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); }
+function tab(t){ document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === t)); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); if (t === 'settings') { draft = Object.assign({}, theme); fillSet(); } }
 $('tabs').onclick = e => { if (e.target.dataset.t) tab(e.target.dataset.t); };
 $('find').onclick = search;
-$('q').onkeydown = e => { if (e.key === 'Enter') search(); };
 $('present').onclick = () => present(current.slides);
-$('proj').onclick = () => window.open(location.pathname + '?audience=1', 'bpAudience', 'width=1000,height=600');
-$('ppt').onclick = () => downloadPPT(current.slides, current.query.replace(/[^\w]+/g,'-'));
+$('proj').onclick = () => {
+  const w = window.open(location.pathname + '?audience=1', 'bpAudience', 'width=1000,height=600');
+  if (!w) { toast('The projector window was blocked. Allow pop-ups for this page.'); return; }
+  toast('Projector window opened. Drag it to the projector screen.');
+  setTimeout(() => { if (chan && S.length) chan.postMessage({slide:S[idx], theme:themeOnly(theme), blank}); }, 900);
+};
+$('ppt').onclick = e => downloadPPT(current.slides, current.query.replace(/[^\w]+/g,'-'), e.currentTarget);
 const entry = () => ({query:current.query, ver:$('ver').value, ver2:$('ver2').value});
-$('addpl').onclick = () => { playlist.push(entry()); save('bp.playlist',playlist); renderLists(); pushPlaylist(); };
+$('addpl').onclick = () => { playlist.push(entry()); save('bp.playlist',playlist); renderLists(); pushPlaylist(); toast('Added to playlist: ' + current.query); };
 $('addfav').onclick = async () => {
+  const i = favIndex();
+  if (i >= 0) { const f = favs[i]; if (user && f.id) sb.from('favorites').delete().eq('id', f.id).then(() => {}); favs.splice(i, 1); save('bp.favs',favs); renderLists(); toast('Removed from favorites.'); return; }
   const e = entry();
   if (user) { const {data} = await sb.from('favorites').insert({user_id:user.id, reference:e.query, version_id:e.ver}).select('id').single(); if (data) e.id = data.id; }
-  favs.push(e); save('bp.favs',favs); renderLists();
+  favs.push(e); save('bp.favs',favs); renderLists(); toast('Saved to favorites.');
+};
+$('plPresent').onclick = async () => present(await playlistSlides());
+$('plPpt').onclick = async e => { const b = e.currentTarget; b.disabled = true; const s = await playlistSlides(); b.disabled = false; downloadPPT(s, 'service-playlist', b); };
+$('plClear').onclick = () => { playlist = []; save('bp.playlist',playlist); renderLists(); pushPlaylist(); };
+$('hClear').onclick = () => { history = []; save('bp.history',history); renderLists(); };
+$('csv').onclick = () => {
+  const csv = 'Reference,Version,Shown at\n' + history.map(h => [h.ref,h.ver,h.t].map(x => '"' + String(x).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'verse-history.csv'; a.click();
 };
 $('login').onclick = () => authDo('in');
 $('signup').onclick = () => authDo('up');
+$('pw').onkeydown = e => { if (e.key === 'Enter') authDo('in'); };
 $('logout').onclick = async () => {
   if (sb) await sb.auth.signOut();
   history = []; playlist = []; favs = []; plId = null;
   save('bp.history', history); save('bp.playlist', playlist); save('bp.favs', favs); renderLists();
   authMsg('You are logged out.');
 };
-$('pw').onkeydown = e => { if (e.key === 'Enter') authDo('in'); };
-$('plPresent').onclick = async () => present(await playlistSlides());
-$('plPpt').onclick = async () => downloadPPT(await playlistSlides(), 'service-playlist');
-$('plClear').onclick = () => { playlist = []; save('bp.playlist',playlist); renderLists(); pushPlaylist(); };
-$('hClear').onclick = () => { history = []; save('bp.history',history); renderHistory(); };
-$('csv').onclick = () => {
-  const csv = 'Reference,Version,Shown at\n' + history.map(h => [h.ref,h.ver,h.t].map(x => '"' + String(x).replace(/"/g,'""') + '"').join(',')).join('\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'verse-history.csv'; a.click();
-};
-[['tBg','bg'],['tFg','fg'],['tSize','size'],['tFont','font'],['tLogo','logo']].forEach(([id,key]) => {
-  const el = $(id); el.value = theme[key];
-  el.oninput = () => { theme[key] = key === 'size' ? +el.value : el.value; save('bp.theme', theme); };
-});
-fillSelects(); renderLists(); initAuth();
+fillSelects(); renderLists(); fillSet();
+if (!audience) initAuth();
 </script>
 </body>
 </html>
