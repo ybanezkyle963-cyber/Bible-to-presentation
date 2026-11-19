@@ -78,11 +78,11 @@ label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4
 #gate input{width:100%;margin-bottom:10px}
 #stage{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;flex-direction:column;padding:4vmin;text-align:center}
 #stage.on{display:flex}
-#stage .cols{display:flex;flex:1;min-height:0;align-items:center;gap:5vmin;width:100%;justify-content:center;animation:fade .4s ease-out}
+#stage .cols{display:flex;flex:1;align-items:center;gap:5vmin;width:100%;justify-content:center;animation:fade .4s ease-out}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 #stage .col{flex:1}
-#stage .ref{flex:none;width:100%;padding:1.6vmin 0;font:600 4vmin 'Public Sans',sans-serif;opacity:1;letter-spacing:.02em}#stage .ref.top{order:-1}
+#stage .ref{flex:none;width:100%;padding:1.2vmin 0;font:600 3.4vmin 'Public Sans',sans-serif;opacity:.9}#stage .ref.top{order:-1}
 #stage .ver{font:600 2.4vmin 'Public Sans',sans-serif;opacity:.6;margin-top:1vmin}
 #ctl{position:fixed;bottom:2vmin;left:50%;transform:translateX(-50%);z-index:120;display:none;gap:8px;align-items:center;background:rgba(0,0,0,.65);padding:8px 12px;border-radius:999px;color:#fff;opacity:0;transition:opacity .3s}
 #ctl.show{display:flex;opacity:1}#ctl button{background:rgba(255,255,255,.15);border:0;color:#fff;padding:7px 14px;border-radius:999px}
@@ -233,21 +233,14 @@ async function yvp(id, usfm){
   const j = await res.json();
   return stripHtml(j.content || '').replace(/^\d+\s+/, '');
 }
-async function helloFetch(path){
-  let last = null;
-  for (const base of ['https://bible.helloao.org/api/', 'https://bible.chandlerswift.com/api/']) {
-    try { const r = await fetch(base + path); if (r.ok || r.status === 404) { if (r.ok) return r; last = r; } } catch {}
-  }
-  if (last) return last;
-  throw new Error('Could not reach the Free Use Bible API. Check your internet connection.');
-}
 async function resolveCebAlt(){
   if (cebAlt && cebAlt.id) return cebAlt.id;
-  const res = await helloFetch('available_translations.json');
-  const j = await res.json(), list = (j.translations || []).filter(t => /^ceb/i.test(String(t.language || '')) || /^ceb/i.test(String(t.id || '')) || /cebuano/i.test(String(t.languageEnglishName || t.languageName || '') + ' ' + String(t.englishName || '')));
+  const res = await fetch('https://bible.helloao.org/api/available_translations.json');
+  if (!res.ok) throw new Error('Could not reach the Free Use Bible API. Check your internet connection.');
+  const j = await res.json(), list = (j.translations || []).filter(t => String(t.language).toLowerCase() === 'ceb');
   if (!list.length) throw new Error('No free Cebuano Bible was found in the Free Use Bible API. Try the wldeh option in Settings.');
   const txt = t => [t.name, t.englishName, t.id, t.shortName].join(' ');
-  const t = list.find(x => /pulong|contemporary|ocb/i.test(txt(x))) || list.find(x => /balaan|literal|ulb/i.test(txt(x))) || list.find(x => /biblia|bugna|pinadayag/i.test(txt(x))) || list[0];
+  const t = list.find(x => /pulong|contemporary|ocb/i.test(txt(x))) || list.find(x => /balaan|literal|ulb/i.test(txt(x))) || list[0];
   cebAlt = {id:t.id, name:t.shortName || t.id, title:t.englishName || t.name, notice:t.licenseNotice || ''};
   save('bp.cebAlt', cebAlt);
   return t.id;
@@ -271,7 +264,7 @@ async function getVerses(ver, r){
   if (ver === 'HELLO' || ver === 'CEBALT') {
     const hid = ver === 'CEBALT' ? await resolveCebAlt() : theme.heloId;
     if (!hid) throw new Error('Pick a Free Use Bible API translation in Settings first.');
-    const res = await helloFetch(`${encodeURIComponent(hid)}/${USFM[r.b]}/${r.ch}.simple.json`);
+    const res = await fetch(`https://bible.helloao.org/api/${encodeURIComponent(hid)}/${USFM[r.b]}/${r.ch}.simple.json`);
     if (!res.ok) throw new Error('That translation does not have this chapter (' + hid + ').');
     const j = await res.json();
     let vs = j.chapter.content.filter(c => c.type === 'verse');
@@ -374,13 +367,10 @@ function draw(slide, th, bl){
   st.style.fontFamily = `'${th.font}', Georgia, serif`;
   if (bl === 'black' || bl === 'white') { st.innerHTML = ''; return; }
   if (bl === 'logo') { st.innerHTML = `<div style="font-size:8vmin">✝</div><div style="font-size:5vmin">${esc(th.logo)}</div>`; return; }
-  if (!slide || !slide.parts.length) { st.innerHTML = ''; return; }
+  if (!slide || !slide.parts.length) { st.innerHTML = '<div style="font-size:4vmin;opacity:.6">Waiting for the presenter…</div>'; return; }
   const len = slide.parts.reduce((n,p) => n + p.text.length, 0) / slide.parts.length;
   const fs = th.size * (len < 120 ? 1 : len < 250 ? .8 : len < 400 ? .65 : .5) * (slide.parts.length > 1 ? .8 : 1);
   st.innerHTML = `<div class="cols">${slide.parts.map(p => `<div class="col"><div style="font-size:${fs}vmin;line-height:1.35">${esc(p.text)}</div>${slide.parts.length>1?`<div class="ver">${p.ver}</div>`:''}</div>`).join('')}</div><div class="ref ${th.refPos === 'top' ? 'top' : ''}">${esc(slide.ref)}${slide.parts.length===1?' · '+slide.parts[0].ver:''}</div>`;
-  // shrink the verse text until everything, including the reference, fits on the screen
-  let guard = 14, f = fs;
-  while (guard-- > 0 && st.scrollHeight > st.clientHeight + 1 && f > 1.5) { f *= .92; st.querySelectorAll('.col > div:first-child').forEach(d => d.style.fontSize = f + 'vmin'); }
 }
 let local = true, projWin = null, lastBeat = 0, lastMsg = '';
 const projOn = () => Date.now() - lastBeat < 6000;
@@ -401,29 +391,12 @@ function show(){
 let ctlT;
 function ctlShow(){ const c = $('ctl'); c.classList.add('show'); clearTimeout(ctlT); ctlT = setTimeout(() => c.classList.remove('show'), 2600); }
 document.addEventListener('mousemove', () => { if ($('stage').classList.contains('on') && !audience) ctlShow(); });
-async function present(slides, from){
+function present(slides, from){
   if (!slides || !slides.length) return;
   S = slides; idx = from || 0; blank = null;
-  if (projOn()) { local = false; show(); toast('Sent to the projector.'); return; }
-  const opened = await openProjector();
-  if (opened) { local = false; show(); toast(opened === 'ext' ? 'Projector opened on your extended screen.' : 'Projector opened. Drag it to your extended screen.'); setTimeout(updBar, 2500); return; }
-  local = true; $('stage').classList.add('on'); show(); ctlShow(); if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
-}
-// Opens the audience window on the extended screen. Returns 'ext', 'win' or false (no extended screen: the old full-screen mode is used).
-async function openProjector(){
-  if (projWin && !projWin.closed) return 'win';
-  if (window.screen && window.screen.isExtended === false) return false;
-  let s = null, known = window.screen && window.screen.isExtended === true;
-  if ('getScreenDetails' in window) {
-    try { const d = await window.getScreenDetails(); known = d.screens.length > 1; s = d.screens.find(x => !x.isPrimary) || d.screens.find(x => x !== d.currentScreen) || null; } catch {}
-  }
-  if (!s && !known) return false;
-  const feat = s ? `popup=yes,left=${s.availLeft},top=${s.availTop},width=${s.availWidth},height=${s.availHeight}` : 'popup=yes,width=1000,height=600';
-  const w = window.open(location.href.split('#')[0].split('?')[0] + '?audience=1', 'bpAudience', feat);
-  if (!w) { toast('The projector window was blocked. Allow pop-ups for this page, then press Present again.'); return false; }
-  projWin = w;
-  if (s) { try { w.moveTo(s.availLeft, s.availTop); w.resizeTo(s.availWidth, s.availHeight); } catch {} }
-  return s ? 'ext' : 'win';
+  local = !projOn();
+  if (local) { $('stage').classList.add('on'); show(); ctlShow(); if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); }
+  else { show(); toast('Sent to the projector.'); }
 }
 function exit(){ $('stage').classList.remove('on'); $('ctl').classList.remove('show'); if (document.fullscreenElement) document.exitFullscreen(); renderLists(); }
 const go = d => { idx = Math.max(0, Math.min(S.length-1, idx + d)); blank = null; show(); };
@@ -450,9 +423,9 @@ if (audience) {
   window.addEventListener('message', onMsg);
   const beat = () => { const m = {type:'beat'}; if (chan) chan.postMessage(m); if (window.opener) { try { window.opener.postMessage(m, '*'); } catch {} } };
   beat(); setInterval(beat, 2000);
-  const fsToggle = () => { if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); } else document.exitFullscreen(); };
-  document.addEventListener('dblclick', fsToggle);
-  document.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'f') fsToggle(); });
+  const hint = document.createElement('div'); hint.id = 'fsHint'; hint.textContent = 'Click once for full screen'; document.body.appendChild(hint);
+  setTimeout(() => { hint.style.opacity = 0; }, 7000);
+  document.addEventListener('click', () => { hint.remove(); if (!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); });
 }
 
 // ===== PowerPoint =====
@@ -461,7 +434,7 @@ async function downloadPPT(slides, name, btn){
   if (!slides.length) return;
   const old = btn && btn.innerHTML; if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
   try {
-    const p = new PptxGenJS(); p.layout = 'LAYOUT_WIDE';
+    const p = new PptxGenJS(); p.layout = 'LAYOUT_16x9';
     const bg = theme.bg.slice(1), fg = theme.fg.slice(1), isTop = theme.refPos === 'top';
     slides.forEach(s => {
       const sl = p.addSlide(); sl.background = {color:bg};
@@ -470,10 +443,10 @@ async function downloadPPT(slides, name, btn){
       const size = (len < 120 ? 40 : len < 250 ? 32 : len < 400 ? 26 : 20) - (n > 1 ? 6 : 0);
       s.parts.forEach((part, i) => {
         const x = 0.4 + i * (w + 0.2) * (12.5 / 13);
-        sl.addText(part.text, {x, y:isTop ? 1.2 : 0.4, w:w-0.2, h:4.8, fontFace:theme.font, fontSize:size, color:fg, align:'center', valign:'middle', fit:'shrink'});
-        if (n > 1) sl.addText(part.ver, {x, y:isTop ? 6.1 : 5.3, w:w-0.2, h:0.4, fontSize:14, color:fg, align:'center'});
+        sl.addText(part.text, {x, y:isTop ? 1.1 : 0.5, w:w-0.2, h:4.9, fontFace:theme.font, fontSize:size, color:fg, align:'center', valign:'middle', fit:'shrink'});
+        if (n > 1) sl.addText(part.ver, {x, y:isTop ? 6.1 : 5.4, w:w-0.2, h:0.4, fontSize:14, color:fg, align:'center'});
       });
-      sl.addText(s.ref + (n === 1 ? ' (' + s.parts[0].ver + ')' : ''), {x:0.5, y:isTop ? 0.35 : 6.45, w:12.3, h:0.7, fontSize:24, bold:true, fontFace:theme.font, color:fg, align:'center', valign:'middle'});
+      sl.addText(s.ref + (n === 1 ? ' (' + s.parts[0].ver + ')' : ''), {x:0.5, y:isTop ? 0.3 : 6.3, w:12.3, h:0.6, fontSize:20, bold:true, color:fg, align:'center'});
     });
     await p.writeFile({fileName: name + '.pptx'});
     toast('PowerPoint downloaded.');
@@ -607,12 +580,17 @@ $('tabs').onclick = e => { if (e.target.dataset.t) tab(e.target.dataset.t); };
 $('find').onclick = search;
 $('present').onclick = () => present(current.slides);
 $('proj').onclick = async () => {
-  if (projOn() || (projWin && !projWin.closed)) { toast('The projector is already open.'); try { projWin && projWin.focus(); } catch {} return; }
-  const r = await openProjector();
-  if (r === 'ext') toast('Projector opened on your extended screen.');
-  else if (r === 'win') toast('Projector opened. Drag it to your extended screen.');
-  else if (r === false && !(window.screen && window.screen.isExtended === false)) toast('Could not open the projector.');
-  else if (r === false) toast('No extended screen found. Connect your projector, then try again.');
+  let feat = 'popup=yes,width=1000,height=600', ext = false;
+  if ('getScreenDetails' in window) {
+    try {
+      const d = await window.getScreenDetails();
+      const s = d.screens.find(x => !x.isPrimary) || d.screens.find(x => x !== d.currentScreen);
+      if (s) { feat = `popup=yes,left=${s.availLeft},top=${s.availTop},width=${s.availWidth},height=${s.availHeight}`; ext = true; }
+    } catch {}
+  }
+  projWin = window.open(location.href.split('#')[0].split('?')[0] + '?audience=1', 'bpAudience', feat);
+  if (!projWin) { toast('The projector window was blocked. Allow pop-ups for this page and try again.'); return; }
+  toast(ext ? 'Projector opened on your second screen. Click it once for full screen.' : 'Projector opened. Drag it to your second screen, then click it once for full screen.');
 };
 $('ppt').onclick = e => downloadPPT(current.slides, current.query.replace(/[^\w]+/g,'-'), e.currentTarget);
 const entry = () => ({query:current.query, ver:$('ver').value, ver2:$('ver2').value});
